@@ -17,8 +17,17 @@ models.Base.metadata.create_all(bind=database.engine)
 @app.post("/urls/", response_class=HTMLResponse)
 async def create_url(request: Request, db: Session = Depends(database.get_db), url: str = Form(...)):
     db_url = crud.create_url(db=db, target_url=url)
-    # Returning the shortened URL to the same page
-    return templates.TemplateResponse("index.html", {"request": request, "short_url": db_url.short_url, "original_url": url})
+    # Dynamically generate the full URL
+    full_short_url = f"{request.base_url}{db_url.short_url}"
+    return templates.TemplateResponse(
+        "index.html",
+        {
+            "request": request,
+            "short_url": db_url.short_url,
+            "original_url": url,
+            "full_short_url": full_short_url,
+        },
+    )
 
 # Get request to redirect to the target URL
 @app.get("/{short_url}")
